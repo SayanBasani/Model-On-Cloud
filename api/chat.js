@@ -1,4 +1,6 @@
-import { pipeline } from "@huggingface/transformers";
+import { pipeline, env } from "@huggingface/transformers";
+
+env.cacheDir = "/tmp/transformers-cache";
 
 let generator = null;
 
@@ -61,23 +63,20 @@ export default async function handler(req, res) {
         ];
 
         const output = await model(messages, {
-            max_new_tokens: 256,
+            max_new_tokens: 64,
             do_sample: false
         });
 
         let answer = "";
 
-        if (
-            output &&
-            output[0] &&
-            output[0].generated_text
-        ) {
+        if (output?.[0]?.generated_text) {
 
             const generated = output[0].generated_text;
 
             if (Array.isArray(generated)) {
 
-                const lastMessage = generated[generated.length - 1];
+                const lastMessage =
+                    generated[generated.length - 1];
 
                 answer = lastMessage?.content || "";
 
@@ -91,7 +90,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
             success: true,
-            answer: answer
+            answer
         });
 
     } catch (error) {
