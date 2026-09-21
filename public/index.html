@@ -416,6 +416,9 @@
             document.getElementById("welcome");
 
 
+        let conversation = [];
+
+
         function addMessage(text, type) {
 
             if (welcome) {
@@ -431,9 +434,11 @@
             const bubble =
                 document.createElement("div");
 
-            bubble.className = "bubble";
+            bubble.className =
+                "bubble";
 
-            bubble.textContent = text;
+            bubble.textContent =
+                text;
 
             message.appendChild(bubble);
 
@@ -456,14 +461,17 @@
             const message =
                 document.createElement("div");
 
-            message.className = "message ai";
+            message.className =
+                "message ai";
 
-            message.id = "typingMessage";
+            message.id =
+                "typingMessage";
 
             const bubble =
                 document.createElement("div");
 
-            bubble.className = "bubble";
+            bubble.className =
+                "bubble";
 
             bubble.innerHTML = `
                 <div class="typing">
@@ -497,22 +505,25 @@
         }
 
 
-        async function askAI(message) {
+        async function askAI() {
 
             const response =
-                await fetch(API_URL, {
+                await fetch(
+                    API_URL,
+                    {
+                        method: "POST",
 
-                    method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
 
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-                        message: message
-                    })
-
-                });
+                        body: JSON.stringify({
+                            messages:
+                                conversation
+                        })
+                    }
+                );
 
 
             const data =
@@ -540,6 +551,7 @@
 
                 event.preventDefault();
 
+
                 const message =
                     messageInput.value.trim();
 
@@ -555,14 +567,23 @@
                 );
 
 
+                conversation.push({
+                    role: "user",
+                    content: message
+                });
+
+
                 messageInput.value = "";
 
                 messageInput.style.height =
                     "48px";
 
-                sendButton.disabled = true;
 
-                messageInput.disabled = true;
+                sendButton.disabled =
+                    true;
+
+                messageInput.disabled =
+                    true;
 
 
                 addTyping();
@@ -571,24 +592,37 @@
                 try {
 
                     const answer =
-                        await askAI(message);
+                        await askAI();
+
 
                     removeTyping();
 
+
                     addMessage(
-                        answer ||
-                        "The AI returned an empty response.",
+                        answer,
                         "ai"
                     );
+
+
+                    conversation.push({
+                        role: "assistant",
+                        content: answer
+                    });
+
 
                 } catch (error) {
 
                     removeTyping();
 
+
                     addMessage(
                         `Error: ${error.message}`,
                         "ai"
                     );
+
+
+                    // Remove the failed user message
+                    conversation.pop();
 
                 } finally {
 
@@ -640,7 +674,6 @@
 
             }
         );
-
 
     </script>
 
