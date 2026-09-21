@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -9,14 +10,15 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <title>ModelOnCloud - AI Chat</title>
+
     <meta
         name="description"
-        content="Model On Cloud - AI model API"
+        content="Chat with ModelOnCloud AI using a simple API."
     >
 
-    <title>Model On Cloud</title>
-
     <style>
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -26,723 +28,621 @@
         body {
             font-family:
                 Inter,
-                ui-sans-serif,
                 system-ui,
                 -apple-system,
                 BlinkMacSystemFont,
                 "Segoe UI",
                 sans-serif;
 
-            background: #09090b;
-            color: #fafafa;
-            line-height: 1.6;
+            background: #f5f7fb;
+            color: #111827;
+            min-height: 100vh;
         }
 
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        .container {
-            width: min(1100px, 92%);
-            margin: 0 auto;
-        }
-
-        header {
-            border-bottom: 1px solid #27272a;
-            background: rgba(9, 9, 11, 0.9);
-        }
-
-        .nav {
-            min-height: 70px;
-
+        .navbar {
+            height: 64px;
+            border-bottom: 1px solid #e5e7eb;
+            background: rgba(255, 255, 255, 0.9);
             display: flex;
             align-items: center;
             justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .logo {
             font-size: 20px;
             font-weight: 700;
+            color: #111827;
         }
 
         .logo span {
-            color: #8b5cf6;
+            color: #6366f1;
         }
 
-        .nav-links {
+        .status {
             display: flex;
-            gap: 24px;
-            color: #a1a1aa;
-            font-size: 14px;
-        }
-
-        .nav-links a:hover {
-            color: white;
-        }
-
-        .hero {
-            padding: 100px 0 70px;
-            text-align: center;
-        }
-
-        .badge {
-            display: inline-block;
-
-            padding: 7px 14px;
-            margin-bottom: 24px;
-
-            border: 1px solid #3f3f46;
-            border-radius: 999px;
-
-            color: #c4b5fd;
-            background: #18181b;
-
+            align-items: center;
+            gap: 7px;
             font-size: 13px;
+            color: #16a34a;
         }
 
-        h1 {
-            font-size: clamp(42px, 7vw, 76px);
-            line-height: 1;
-            letter-spacing: -3px;
-            margin-bottom: 24px;
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
         }
 
-        .gradient {
-            background: linear-gradient(
-                90deg,
-                #8b5cf6,
-                #06b6d4
-            );
-
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        .container {
+            width: min(900px, calc(100% - 32px));
+            margin: 40px auto;
         }
 
-        .hero p {
-            max-width: 680px;
-            margin: 0 auto;
-
-            color: #a1a1aa;
-            font-size: 18px;
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
         }
 
-        .buttons {
-            margin-top: 32px;
-
-            display: flex;
-            justify-content: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .button {
-            padding: 12px 20px;
-
-            border-radius: 8px;
-
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .primary {
-            background: #8b5cf6;
-            color: white;
-        }
-
-        .primary:hover {
-            background: #7c3aed;
-        }
-
-        .secondary {
-            border: 1px solid #3f3f46;
-            background: #18181b;
-        }
-
-        .secondary:hover {
-            background: #27272a;
-        }
-
-        section {
-            padding: 70px 0;
-        }
-
-        .section-title {
-            font-size: 30px;
-            margin-bottom: 12px;
-        }
-
-        .section-description {
-            color: #a1a1aa;
-            margin-bottom: 30px;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns:
-                repeat(3, minmax(0, 1fr));
-
-            gap: 18px;
-        }
-
-        .card {
-            border: 1px solid #27272a;
-            border-radius: 14px;
-
-            padding: 24px;
-
-            background: #111113;
-        }
-
-        .card h3 {
+        .header h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            line-height: 1.1;
             margin-bottom: 10px;
         }
 
-        .card p {
-            color: #a1a1aa;
-            font-size: 14px;
+        .header p {
+            color: #6b7280;
+            font-size: 15px;
         }
 
-        .endpoint {
-            border: 1px solid #27272a;
-            border-radius: 14px;
-
+        .chat-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 18px;
             overflow: hidden;
-
-            background: #111113;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
         }
 
-        .endpoint-header {
-            padding: 18px 20px;
-
+        .messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 24px;
             display: flex;
-            align-items: center;
-            gap: 12px;
-
-            border-bottom: 1px solid #27272a;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .method {
-            padding: 5px 9px;
-
-            border-radius: 6px;
-
-            background: #14532d;
-            color: #86efac;
-
-            font-size: 12px;
-            font-weight: 700;
+        .message {
+            display: flex;
         }
 
-        .endpoint-url {
-            font-family: monospace;
-            font-size: 14px;
+        .message.user {
+            justify-content: flex-end;
         }
 
-        pre {
-            padding: 22px;
-
-            overflow-x: auto;
-
-            color: #d4d4d8;
-
-            font-size: 13px;
-            line-height: 1.7;
+        .message.ai {
+            justify-content: flex-start;
         }
 
-        code {
-            font-family:
-                "JetBrains Mono",
-                "Fira Code",
-                monospace;
+        .bubble {
+            max-width: 75%;
+            padding: 12px 15px;
+            border-radius: 14px;
+            font-size: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
 
-        .info-table {
-            width: 100%;
-            border-collapse: collapse;
+        .user .bubble {
+            background: #6366f1;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
 
-            border: 1px solid #27272a;
+        .ai .bubble {
+            background: #f3f4f6;
+            color: #111827;
+            border-bottom-left-radius: 4px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin: auto;
+            color: #6b7280;
+        }
+
+        .welcome-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+        }
+
+        .welcome h2 {
+            color: #111827;
+            margin-bottom: 6px;
+        }
+
+        .input-area {
+            border-top: 1px solid #e5e7eb;
+            padding: 16px;
+            background: #fafafa;
+        }
+
+        .input-form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-form textarea {
+            flex: 1;
+            resize: none;
+            min-height: 48px;
+            max-height: 140px;
+            padding: 13px 15px;
+            border: 1px solid #d1d5db;
             border-radius: 12px;
-            overflow: hidden;
+            outline: none;
+            font-family: inherit;
+            font-size: 15px;
+            background: white;
         }
 
-        .info-table th,
-        .info-table td {
-            padding: 14px 16px;
-
-            text-align: left;
-
-            border-bottom: 1px solid #27272a;
+        .input-form textarea:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
         }
 
-        .info-table th {
-            background: #18181b;
+        .send-button {
+            width: 52px;
+            border: none;
+            border-radius: 12px;
+            background: #6366f1;
+            color: white;
+            cursor: pointer;
+            font-size: 20px;
+            transition: 0.2s;
         }
 
-        .info-table td {
-            color: #a1a1aa;
+        .send-button:hover {
+            background: #4f46e5;
         }
 
-        footer {
-            padding: 35px 0;
-
-            border-top: 1px solid #27272a;
-
-            color: #71717a;
-            font-size: 14px;
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
-        @media (max-width: 750px) {
-            .nav-links {
-                display: none;
+        .hint {
+            margin-top: 9px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing span {
+            width: 6px;
+            height: 6px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.2s infinite;
+        }
+
+        .typing span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .typing span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
             }
 
-            .cards {
-                grid-template-columns: 1fr;
+            30% {
+                transform: translateY(-4px);
+                opacity: 1;
             }
 
-            .hero {
-                padding: 70px 0 50px;
-            }
-
-            h1 {
-                letter-spacing: -2px;
-            }
         }
+
+        .footer {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        @media (max-width: 600px) {
+
+            .navbar {
+                padding: 0 16px;
+            }
+
+            .container {
+                width: calc(100% - 20px);
+                margin: 20px auto;
+            }
+
+            .messages {
+                height: 60vh;
+                min-height: 400px;
+                padding: 16px;
+            }
+
+            .bubble {
+                max-width: 88%;
+            }
+
+            .input-area {
+                padding: 12px;
+            }
+
+        }
+
     </style>
+
 </head>
 
 <body>
 
-<header>
+    <nav class="navbar">
 
-    <div class="container nav">
-
-        <a
-            href="/"
-            class="logo"
-        >
+        <div class="logo">
             Model<span>OnCloud</span>
-        </a>
+        </div>
 
-        <a
-            href="/"
-            class="logo"
-        >
-            Hello<span>Sayan</span>
-        </a>
+        <div class="status">
+            <div class="status-dot"></div>
+            API Online
+        </div>
 
-        <nav class="nav-links">
-
-            <a href="#about">
-                About
-            </a>
-
-            <a href="#api">
-                API
-            </a>
-
-            <a href="#usage">
-                Usage
-            </a>
-
-            <a href="/api/health">
-                Health
-            </a>
-
-        </nav>
-
-    </div>
-
-</header>
+    </nav>
 
 
-<main>
+    <main class="container">
 
-    <section class="hero">
-
-        <div class="container">
-
-            <div class="badge">
-                AI Model API
-            </div>
+        <div class="header">
 
             <h1>
-                Run AI through a
-                <span class="gradient">
-                    simple API
-                </span>
+                Chat with AI
             </h1>
 
             <p>
-                Model On Cloud provides a simple HTTP API
-                for sending prompts to an AI model and
-                receiving generated responses.
+                Powered by the ModelOnCloud API
             </p>
 
-            <div class="buttons">
+        </div>
 
-                <a
-                    href="#api"
-                    class="button primary"
+
+        <section class="chat-card">
+
+            <div
+                class="messages"
+                id="messages"
+            >
+
+                <div class="welcome" id="welcome">
+
+                    <div class="welcome-icon">
+                        🤖
+                    </div>
+
+                    <h2>
+                        How can I help?
+                    </h2>
+
+                    <p>
+                        Ask me anything to get started.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="input-area">
+
+                <form
+                    class="input-form"
+                    id="chatForm"
                 >
-                    View API
-                </a>
 
-                <a
-                    href="#usage"
-                    class="button secondary"
-                >
-                    How to use
-                </a>
+                    <textarea
+                        id="messageInput"
+                        placeholder="Type your message..."
+                        rows="1"
+                        autocomplete="off"
+                    ></textarea>
 
-            </div>
+                    <button
+                        class="send-button"
+                        id="sendButton"
+                        type="submit"
+                        title="Send message"
+                    >
+                        ↑
+                    </button>
 
-        </div>
+                </form>
 
-    </section>
-
-
-    <section id="about">
-
-        <div class="container">
-
-            <h2 class="section-title">
-                What is Model On Cloud?
-            </h2>
-
-            <p class="section-description">
-                A lightweight HTTP interface around an AI model.
-                Your application sends a request and receives
-                a JSON response.
-            </p>
-
-
-            <div class="cards">
-
-                <div class="card">
-
-                    <h3>
-                        Simple API
-                    </h3>
-
-                    <p>
-                        Send a POST request with your message
-                        and receive the generated response.
-                    </p>
-
-                </div>
-
-
-                <div class="card">
-
-                    <h3>
-                        JSON
-                    </h3>
-
-                    <p>
-                        Requests and responses use JSON,
-                        making the API easy to integrate.
-                    </p>
-
-                </div>
-
-
-                <div class="card">
-
-                    <h3>
-                        Any Client
-                    </h3>
-
-                    <p>
-                        Use the API from JavaScript, Python,
-                        mobile applications, or any HTTP client.
-                    </p>
-
+                <div class="hint">
+                    Press Enter to send · Shift + Enter for new line
                 </div>
 
             </div>
 
+        </section>
+
+
+        <div class="footer">
+            ModelOnCloud · Simple AI API
         </div>
 
-    </section>
+    </main>
 
 
-    <section id="api">
+    <script>
 
-        <div class="container">
+        const API_URL = "/api/chat";
 
-            <h2 class="section-title">
-                API Endpoint
-            </h2>
+        const chatForm =
+            document.getElementById("chatForm");
 
-            <p class="section-description">
-                Send your AI request to this endpoint.
-            </p>
+        const messageInput =
+            document.getElementById("messageInput");
+
+        const sendButton =
+            document.getElementById("sendButton");
+
+        const messages =
+            document.getElementById("messages");
+
+        const welcome =
+            document.getElementById("welcome");
 
 
-            <div class="endpoint">
+        function addMessage(text, type) {
 
-                <div class="endpoint-header">
+            if (welcome) {
+                welcome.remove();
+            }
 
-                    <span class="method">
-                        POST
-                    </span>
+            const message =
+                document.createElement("div");
 
-                    <span class="endpoint-url">
-                        /api/chat
-                    </span>
+            message.className =
+                `message ${type}`;
 
+            const bubble =
+                document.createElement("div");
+
+            bubble.className = "bubble";
+
+            bubble.textContent = text;
+
+            message.appendChild(bubble);
+
+            messages.appendChild(message);
+
+            messages.scrollTop =
+                messages.scrollHeight;
+
+            return message;
+
+        }
+
+
+        function addTyping() {
+
+            if (welcome) {
+                welcome.remove();
+            }
+
+            const message =
+                document.createElement("div");
+
+            message.className = "message ai";
+
+            message.id = "typingMessage";
+
+            const bubble =
+                document.createElement("div");
+
+            bubble.className = "bubble";
+
+            bubble.innerHTML = `
+                <div class="typing">
+                    <span></span>
+                    <span></span>
+                    <span></span>
                 </div>
+            `;
 
+            message.appendChild(bubble);
 
-                <pre><code>POST /api/chat
-Content-Type: application/json
+            messages.appendChild(message);
 
-{
-    "message": "Explain artificial intelligence"
-}</code></pre>
+            messages.scrollTop =
+                messages.scrollHeight;
 
-            </div>
+        }
 
-        </div>
 
-    </section>
+        function removeTyping() {
 
+            const typing =
+                document.getElementById(
+                    "typingMessage"
+                );
 
-    <section>
+            if (typing) {
+                typing.remove();
+            }
 
-        <div class="container">
+        }
 
-            <h2 class="section-title">
-                Request Parameters
-            </h2>
 
-            <p class="section-description">
-                Parameters currently accepted by the API.
-            </p>
+        async function askAI(message) {
 
+            const response =
+                await fetch(API_URL, {
 
-            <table class="info-table">
+                    method: "POST",
 
-                <thead>
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
 
-                    <tr>
+                    body: JSON.stringify({
+                        message: message
+                    })
 
-                        <th>
-                            Parameter
-                        </th>
+                });
 
-                        <th>
-                            Type
-                        </th>
 
-                        <th>
-                            Required
-                        </th>
+            const data =
+                await response.json();
 
-                        <th>
-                            Description
-                        </th>
 
-                    </tr>
+            if (!response.ok) {
 
-                </thead>
+                throw new Error(
+                    data.error ||
+                    `API error: ${response.status}`
+                );
 
+            }
 
-                <tbody>
 
-                    <tr>
+            return data.answer;
 
-                        <td>
-                            message
-                        </td>
+        }
 
-                        <td>
-                            string
-                        </td>
 
-                        <td>
-                            Yes
-                        </td>
+        chatForm.addEventListener(
+            "submit",
+            async function (event) {
 
-                        <td>
-                            The question or prompt sent to the model.
-                        </td>
+                event.preventDefault();
 
-                    </tr>
+                const message =
+                    messageInput.value.trim();
 
-                </tbody>
 
-            </table>
+                if (!message) {
+                    return;
+                }
 
-        </div>
 
-    </section>
+                addMessage(
+                    message,
+                    "user"
+                );
 
 
-    <section id="usage">
+                messageInput.value = "";
 
-        <div class="container">
+                messageInput.style.height =
+                    "48px";
 
-            <h2 class="section-title">
-                How to use
-            </h2>
+                sendButton.disabled = true;
 
-            <p class="section-description">
-                Example JavaScript request.
-            </p>
+                messageInput.disabled = true;
 
 
-            <div class="endpoint">
+                addTyping();
 
-                <pre><code>const response = await fetch(
-    "https://your-domain.vercel.app/api/chat",
-    {
-        method: "POST",
 
-        headers: {
-            "Content-Type": "application/json"
-        },
+                try {
 
-        body: JSON.stringify({
-            message: "What is machine learning?"
-        })
-    }
-);
+                    const answer =
+                        await askAI(message);
 
-const data = await response.json();
+                    removeTyping();
 
-console.log(data.answer);</code></pre>
+                    addMessage(
+                        answer ||
+                        "The AI returned an empty response.",
+                        "ai"
+                    );
 
-            </div>
+                } catch (error) {
 
+                    removeTyping();
 
-            <br>
+                    addMessage(
+                        `Error: ${error.message}`,
+                        "ai"
+                    );
 
+                } finally {
 
-            <p class="section-description">
-                Example response:
-            </p>
+                    sendButton.disabled =
+                        false;
 
+                    messageInput.disabled =
+                        false;
 
-            <div class="endpoint">
+                    messageInput.focus();
 
-                <pre><code>{
-    "success": true,
-    "answer": "Machine learning is a branch of AI..."
-}</code></pre>
+                }
 
-            </div>
+            }
+        );
 
-        </div>
 
-    </section>
+        messageInput.addEventListener(
+            "keydown",
+            function (event) {
 
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
 
-    <section>
+                    event.preventDefault();
 
-        <div class="container">
+                    chatForm.requestSubmit();
 
-            <h2 class="section-title">
-                Available Routes
-            </h2>
+                }
 
-            <table class="info-table">
+            }
+        );
 
-                <thead>
 
-                    <tr>
+        messageInput.addEventListener(
+            "input",
+            function () {
 
-                        <th>
-                            Method
-                        </th>
+                this.style.height =
+                    "48px";
 
-                        <th>
-                            Route
-                        </th>
+                this.style.height =
+                    `${Math.min(
+                        this.scrollHeight,
+                        140
+                    )}px`;
 
-                        <th>
-                            Purpose
-                        </th>
+            }
+        );
 
-                    </tr>
 
-                </thead>
-
-
-                <tbody>
-
-                    <tr>
-
-                        <td>
-                            GET
-                        </td>
-
-                        <td>
-                            /
-                        </td>
-
-                        <td>
-                            API documentation / landing page
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            GET
-                        </td>
-
-                        <td>
-                            /api/health
-                        </td>
-
-                        <td>
-                            Check API status
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            POST
-                        </td>
-
-                        <td>
-                            /api/chat
-                        </td>
-
-                        <td>
-                            Send a prompt to the AI model
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </section>
-
-</main>
-
-
-<footer>
-
-    <div class="container">
-
-        Model On Cloud · AI Model API
-
-    </div>
-
-</footer>
+    </script>
 
 </body>
 
