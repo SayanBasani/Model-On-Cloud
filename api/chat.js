@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 const MODEL = "@cf/meta/llama-3.2-1b-instruct";
 
 export default async function handler(req, res) {
