@@ -26,16 +26,19 @@ async function askAI(message) {
 
 
 async function main() {
-    try {
-        const answer = await askAI(
-            "Explain artificial intelligence in simple words."
-        );
+    while(True)
+        {
+            try {
+                const answer = await askAI(
+                    "Explain artificial intelligence in simple words."
+                );
 
-        console.log("AI:", answer);
+                console.log("AI:", answer);
 
-    } catch (error) {
-        console.error("Error:", error.message);
-    }
+            } catch (error) {
+                console.error("Error:", error.message);
+            }
+        }
 }
 
 

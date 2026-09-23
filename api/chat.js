@@ -89,7 +89,9 @@ export default async function handler(req, res) {
             ];
 
         }
-
+        
+        console.log("User Question ");
+        console.log(messages);
 
         if (messages.length === 0) {
 
@@ -174,6 +176,8 @@ export default async function handler(req, res) {
 
         }
 
+        console.log("Model Output");
+        console.log(answer);
 
         return res.status(200).json({
             success: true,
