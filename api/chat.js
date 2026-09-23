@@ -1,33 +1,12 @@
-import { pipeline, env } from "@huggingface/transformers";
+const ACCOUNT_ID =
+    process.env.CLOUDFLARE_ACCOUNT_ID;
 
-env.cacheDir = "/tmp/transformers-cache";
+const API_TOKEN =
+    process.env.CLOUDFLARE_API_TOKEN;
 
-let generator = null;
 
-async function getGenerator() {
-
-    if (!generator) {
-
-        console.log(
-            "Loading Qwen2.5-0.5B-Instruct..."
-        );
-
-        generator = await pipeline(
-            "text-generation",
-            "onnx-community/Qwen2.5-0.5B-Instruct",
-            {
-                dtype: "q4"
-            }
-        );
-
-        console.log(
-            "Qwen2.5-0.5B-Instruct loaded."
-        );
-
-    }
-
-    return generator;
-}
+const MODEL =
+    "@cf/meta/llama-3.2-1b-instruct";
 
 
 export default async function handler(req, res) {
@@ -41,59 +20,36 @@ export default async function handler(req, res) {
 
     }
 
+
     try {
 
-        const body = req.body || {};
-
-        let messages = [];
-
-
-        /*
-         * New format:
-         *
-         * {
-         *     "messages": [
-         *         {
-         *             "role": "user",
-         *             "content": "Hello"
-         *         }
-         *     ]
-         * }
-         */
-
-        if (Array.isArray(body.messages)) {
-
-            messages = body.messages;
-
-        }
+        const body =
+            req.body || {};
 
 
-        /*
-         * Also support old/simple format:
-         *
-         * {
-         *     "message": "Hello"
-         * }
-         */
+        let messages =
+            body.messages;
 
-        else if (
-            typeof body.message === "string" &&
-            body.message.trim()
+
+        if (
+            !Array.isArray(messages) &&
+            typeof body.message === "string"
         ) {
 
             messages = [
                 {
                     role: "user",
-                    content: body.message.trim()
+                    content: body.message
                 }
             ];
 
         }
-        
-        console.log("User Question ");
-        console.log(messages);
 
-        if (messages.length === 0) {
+
+        if (
+            !Array.isArray(messages) ||
+            messages.length === 0
+        ) {
 
             return res.status(400).json({
                 success: false,
@@ -104,86 +60,103 @@ export default async function handler(req, res) {
         }
 
 
-        /*
-         * Keep only valid chat messages.
-         * Limit context to the latest 12 messages.
-         */
-
         messages = messages
             .filter(
                 message =>
                     message &&
-                    typeof message.content === "string" &&
+                    typeof message.content ===
+                        "string" &&
                     (
                         message.role === "user" ||
                         message.role === "assistant" ||
                         message.role === "system"
                     )
             )
-            .slice(-12);
+            .slice(-20);
 
 
-        if (messages.length === 0) {
+        if (!ACCOUNT_ID) {
 
-            return res.status(400).json({
+            return res.status(500).json({
                 success: false,
-                error: "No valid messages found"
+                error:
+                    "CLOUDFLARE_ACCOUNT_ID is not configured"
             });
 
         }
 
 
-        const model =
-            await getGenerator();
+        if (!API_TOKEN) {
+
+            return res.status(500).json({
+                success: false,
+                error:
+                    "CLOUDFLARE_API_TOKEN is not configured"
+            });
+
+        }
 
 
-        const output =
-            await model(
-                messages,
+        const response =
+            await fetch(
+                `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/${MODEL}`,
                 {
-                    max_new_tokens: 128,
-                    do_sample: false
+                    method: "POST",
+
+                    headers: {
+                        "Authorization":
+                            `Bearer ${API_TOKEN}`,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        messages: messages,
+
+                        max_tokens: 512,
+
+                        temperature: 0.7,
+
+                        top_p: 0.9
+                    })
                 }
             );
 
 
-        let answer = "";
+        const data =
+            await response.json();
 
 
-        if (output?.[0]?.generated_text) {
+        if (!response.ok) {
 
-            const generated =
-                output[0].generated_text;
+            console.error(
+                "Cloudflare error:",
+                data
+            );
 
-
-            if (Array.isArray(generated)) {
-
-                const lastMessage =
-                    generated[
-                        generated.length - 1
-                    ];
-
-                answer =
-                    lastMessage?.content || "";
-
-            }
-
-            else {
-
-                answer = generated;
-
-            }
+            return res.status(
+                response.status
+            ).json({
+                success: false,
+                error:
+                    data?.errors?.[0]?.message ||
+                    "Cloudflare AI request failed"
+            });
 
         }
 
-        console.log("Model Output");
-        console.log(answer);
 
         return res.status(200).json({
-            success: true,
-            answer: answer
-        });
 
+            success: true,
+
+            answer:
+                data?.result?.response || "",
+
+            model: MODEL
+
+        });
 
     }
 
@@ -194,12 +167,14 @@ export default async function handler(req, res) {
             error
         );
 
-
         return res.status(500).json({
+
             success: false,
+
             error:
                 error.message ||
                 "AI generation failed"
+
         });
 
     }
