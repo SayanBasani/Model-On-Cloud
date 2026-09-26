@@ -1,27 +1,43 @@
-import { Chat } from "./types";
+import {
+    Chat
+} from "./types";
 
-const STORAGE_KEY = "modeloncloud-chats";
+const STORAGE_KEY =
+    "modeloncloud-chats";
 
 export function loadChats(): Chat[] {
-    if (typeof window === "undefined") {
+    if (
+        typeof window ===
+        "undefined"
+    ) {
         return [];
     }
 
     try {
-        const data = localStorage.getItem(STORAGE_KEY);
+        const data =
+            localStorage.getItem(
+                STORAGE_KEY
+            );
 
         if (!data) {
             return [];
         }
 
-        return JSON.parse(data) as Chat[];
+        return JSON.parse(
+            data
+        ) as Chat[];
     } catch {
         return [];
     }
 }
 
-export function saveChats(chats: Chat[]): void {
-    if (typeof window === "undefined") {
+export function saveChats(
+    chats: Chat[]
+): void {
+    if (
+        typeof window ===
+        "undefined"
+    ) {
         return;
     }
 
@@ -32,9 +48,14 @@ export function saveChats(chats: Chat[]): void {
 }
 
 export function clearChats(): void {
-    if (typeof window === "undefined") {
+    if (
+        typeof window ===
+        "undefined"
+    ) {
         return;
     }
 
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(
+        STORAGE_KEY
+    );
 }

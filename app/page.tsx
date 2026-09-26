@@ -124,7 +124,10 @@ export default function Home() {
     }
 
     function refreshChats() {
-        setChats(loadChats());
+        const updatedChats =
+            loadChats();
+
+        setChats(updatedChats);
     }
 
     return (
