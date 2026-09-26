@@ -14,6 +14,11 @@ import {
 import { Chat as ChatType } from "@/lib/types";
 
 export default function Home() {
+    const [
+        sidebarCollapsed,
+        setSidebarCollapsed
+    ] = useState(false);
+
     const [chats, setChats] =
         useState<ChatType[]>([]);
 
@@ -25,6 +30,18 @@ export default function Home() {
 
     const [darkMode, setDarkMode] =
         useState(false);
+
+    function handleSidebarToggle() {
+        if (window.innerWidth >= 768) {
+            setSidebarCollapsed(
+                (value) => !value
+            );
+        } else {
+            setSidebarOpen(
+                (value) => !value
+            );
+        }
+    }
 
     useEffect(() => {
         const storedChats = loadChats();
@@ -132,7 +149,7 @@ export default function Home() {
 
     return (
         <main className="flex h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-            <Sidebar
+            {/* <Sidebar
                 chats={chats}
                 activeChatId={activeChatId}
                 isOpen={sidebarOpen}
@@ -142,15 +159,32 @@ export default function Home() {
                 onNewChat={createNewChat}
                 onSelectChat={selectChat}
                 onDeleteChat={deleteChat}
+                collapsed={
+                    sidebarCollapsed
+                }
+
+                onCollapsedChange={
+                    setSidebarCollapsed
+                }
+            /> */}
+            <Sidebar
+                chats={ chats }
+                activeChatId={ activeChatId }
+                isOpen={ sidebarOpen }
+                collapsed={ sidebarCollapsed }
+                onClose={() => setSidebarOpen( false ) }
+                onCollapsedChange={ setSidebarCollapsed }
+                onNewChat={ createNewChat }
+                onSelectChat={ selectChat }
+                onDeleteChat={ deleteChat }
             />
 
             <section className="flex min-w-0 flex-1 flex-col">
                 <Header
                     sidebarOpen={sidebarOpen}
-                    onToggleSidebar={() =>
-                        setSidebarOpen(
-                            !sidebarOpen
-                        )
+                    sidebarCollapsed={sidebarCollapsed}
+                    onToggleSidebar={
+                        handleSidebarToggle
                     }
                     darkMode={darkMode}
                     onToggleTheme={
@@ -165,7 +199,7 @@ export default function Home() {
                                 Welcome to ModelOnCloud
                             </h2>
 
-                            <p className="mt-2 text-sm text-[var(--muted)]">
+                            <p className="mt-2 text-sm text-\[var(--muted)]">
                                 Start a new conversation
                                 to begin.
                             </p>

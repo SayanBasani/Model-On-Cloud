@@ -4,11 +4,13 @@ import {
     Menu,
     Moon,
     Sun,
-    PanelLeft
+    PanelLeft,
+    PanelLeftClose
 } from "lucide-react";
 
 type HeaderProps = {
     sidebarOpen: boolean;
+    sidebarCollapsed: boolean;
     onToggleSidebar: () => void;
     darkMode: boolean;
     onToggleTheme: () => void;
@@ -16,6 +18,7 @@ type HeaderProps = {
 
 export default function Header({
     sidebarOpen,
+    sidebarCollapsed,
     onToggleSidebar,
     darkMode,
     onToggleTheme
@@ -25,15 +28,39 @@ export default function Header({
             <div className="flex items-center gap-3">
                 <button
                     type="button"
-                    onClick={onToggleSidebar}
+                    onClick={
+                        onToggleSidebar
+                    }
                     className="rounded-xl p-2 text-[var(--muted)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]"
-                    aria-label="Toggle sidebar"
+                    aria-label={
+                        sidebarCollapsed
+                            ? "Open sidebar"
+                            : "Collapse sidebar"
+                    }
                 >
-                    {sidebarOpen ? (
-                        <PanelLeft size={19} />
-                    ) : (
-                        <Menu size={19} />
-                    )}
+                    <span className="hidden md:block">
+                        {sidebarCollapsed ? (
+                            <PanelLeft
+                                size={19}
+                            />
+                        ) : (
+                            <PanelLeftClose
+                                size={19}
+                            />
+                        )}
+                    </span>
+
+                    <span className="block md:hidden">
+                        {sidebarOpen ? (
+                            <PanelLeftClose
+                                size={19}
+                            />
+                        ) : (
+                            <Menu
+                                size={19}
+                            />
+                        )}
+                    </span>
                 </button>
 
                 <div>
@@ -49,7 +76,9 @@ export default function Header({
 
             <button
                 type="button"
-                onClick={onToggleTheme}
+                onClick={
+                    onToggleTheme
+                }
                 className="rounded-xl p-2.5 text-[var(--muted)] transition hover:bg-[var(--surface-hover)] hover:text-[var(--foreground)]"
                 aria-label="Toggle theme"
             >

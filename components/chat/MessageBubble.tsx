@@ -238,9 +238,12 @@ export default function MessageBubble({
                                         }
 
                                         return (
+                                            // <code
+                                            //     className={`block overflow-x-auto p-4 font-mono text-sm leading-6 !text-[var(--code-text)] ${className || ""}`}
+                                            // >
                                             <code
-                                                className={`block overflow-x-auto p-4 font-mono text-sm leading-6 !text-[var(--code-text)] ${className || ""}`}
-                                            >
+                                                className={`block overflow-x-auto whitespace-pre p-4 font-mono text-sm leading-6 !text-[var(--code-text)] ${className || ""}`}
+>
                                                 {
                                                     children
                                                 }
