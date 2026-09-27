@@ -123,9 +123,7 @@ export default function Home() {
         }
     }
 
-    function refreshChats() {
-        setChats(loadChats());
-    }
+    function refreshChats() { setChats(loadChats());}
 
     return (
         <main className="flex h-screen overflow-hidden bg-\[var(--background)] text-\[var(--foreground)]">
