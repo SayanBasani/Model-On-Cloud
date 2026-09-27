@@ -1,5 +1,5 @@
-# ModelOnCloud
-
+# [ModelOnCloud](https://model-on-cloud.vercel.app/)
+[Link](https://model-on-cloud.vercel.app/)
 > A modern AI chat application powered by **Next.js** and **Cloudflare Workers AI**.
 
 ModelOnCloud is an AI chat platform designed to provide a fast, responsive ChatGPT-style experience while keeping the AI inference layer separate from the frontend application.
