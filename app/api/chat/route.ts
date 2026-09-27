@@ -1,33 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
+import {
+    NextRequest
+} from "next/server";
 
-const MODEL = "@cf/meta/llama-3.2-1b-instruct";
+const MODEL =
+    "@cf/meta/llama-3.2-1b-instruct";
 
-export async function POST(request: NextRequest) {
+export async function POST(
+    request: NextRequest
+) {
     try {
-        const body = await request.json();
+        const body =
+            await request.json();
 
-        let messages = body.messages;
+        let messages =
+            body?.messages;
 
         if (
-            !Array.isArray(messages) &&
-            typeof body.message === "string"
+            !Array.isArray(
+                messages
+            ) &&
+            typeof body?.message ===
+                "string"
         ) {
             messages = [
                 {
                     role: "user",
-                    content: body.message
+                    content:
+                        body.message
                 }
             ];
         }
 
         if (
-            !Array.isArray(messages) ||
+            !Array.isArray(
+                messages
+            ) ||
             messages.length === 0
         ) {
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: false,
-                    error: "message or messages is required"
+                    error:
+                        "message or messages is required"
                 },
                 {
                     status: 400
@@ -35,30 +49,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        messages = messages
-            .filter(
-                (message: {
-                    role?: string;
-                    content?: string;
-                }) =>
-                    message &&
-                    typeof message.content === "string" &&
-                    (
-                        message.role === "user" ||
-                        message.role === "assistant" ||
-                        message.role === "system"
-                    )
-            )
-            .slice(-20);
-
         const accountId =
-            process.env.CLOUDFLARE_ACCOUNT_ID;
+            process.env
+                .CLOUDFLARE_ACCOUNT_ID;
 
         const apiToken =
-            process.env.CLOUDFLARE_API_TOKEN;
+            process.env
+                .CLOUDFLARE_API_TOKEN;
 
         if (!accountId) {
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: false,
                     error:
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         }
 
         if (!apiToken) {
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: false,
                     error:
@@ -83,62 +83,125 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const response = await fetch(
-            `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL}`,
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${apiToken}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    messages,
-                    max_tokens: 512,
-                    temperature: 0.7,
-                    top_p: 0.9
-                })
-            }
-        );
+        const safeMessages =
+            messages
+                .filter(
+                    (
+                        message
+                    ) =>
+                        message &&
+                        typeof message.content ===
+                            "string" &&
+                        [
+                            "system",
+                            "user",
+                            "assistant"
+                        ].includes(
+                            message.role
+                        )
+                )
+                .slice(-20);
 
-        const data = await response.json();
+        const response =
+            await fetch(
+                `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL}`,
+                {
+                    method:
+                        "POST",
 
-        if (!response.ok) {
-            console.error(
-                "Cloudflare AI error:",
-                data
+                    headers: {
+                        Authorization:
+                            `Bearer ${apiToken}`,
+
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify(
+                            {
+                                messages:
+                                    safeMessages,
+
+                                stream:
+                                    true,
+
+                                max_tokens:
+                                    1024,
+
+                                temperature:
+                                    0.6,
+
+                                top_p:
+                                    0.9
+                            }
+                        )
+                }
             );
 
-            return NextResponse.json(
+        if (!response.ok) {
+            const errorText =
+                await response.text();
+
+            console.error(
+                "Cloudflare AI error:",
+                errorText
+            );
+
+            return Response.json(
                 {
                     success: false,
                     error:
-                        data?.errors?.[0]?.message ||
                         "Cloudflare AI request failed"
                 },
                 {
-                    status: response.status
+                    status:
+                        response.status
                 }
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            answer: data?.result?.response || "",
-            model: MODEL
-        });
+        if (!response.body) {
+            return Response.json(
+                {
+                    success: false,
+                    error:
+                        "AI returned no stream"
+                },
+                {
+                    status: 502
+                }
+            );
+        }
+
+        return new Response(
+            response.body,
+            {
+                status: 200,
+
+                headers: {
+                    "Content-Type":
+                        "text/event-stream",
+
+                    "Cache-Control":
+                        "no-cache, no-transform",
+
+                    Connection:
+                        "keep-alive"
+                }
+            }
+        );
     } catch (error) {
         console.error(
             "Chat API error:",
             error
         );
 
-        return NextResponse.json(
+        return Response.json(
             {
                 success: false,
                 error:
-                    error instanceof Error
-                        ? error.message
-                        : "AI generation failed"
+                    "AI request failed"
             },
             {
                 status: 500

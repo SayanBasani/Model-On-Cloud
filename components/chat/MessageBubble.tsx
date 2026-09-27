@@ -1,5 +1,8 @@
 "use client";
 
+import CodeBlock from "@/components/chat/CodeBlock";
+import { formatMessageTime } from "@/lib/message-utils";
+
 import {
     Bot,
     Check,
@@ -38,8 +41,7 @@ export default function MessageBubble({
     const [copied, setCopied] =
         useState(false);
 
-    const isUser =
-        message.role === "user";
+    const isUser = message.role === "user";
 
     async function copyMessage() {
         try {
@@ -104,6 +106,13 @@ export default function MessageBubble({
                     {isUser ? (
                         <div className="whitespace-pre-wrap break-words text-sm leading-7">
                             {message.content}
+                            
+                            <span className="text-[10px] text-[var(--muted)]">
+                                {formatMessageTime(
+                                    message.createdAt
+                                )}
+                            </span>
+
                         </div>
                     ) : (
                         <div className="markdown-content max-w-none break-words">
@@ -222,12 +231,24 @@ export default function MessageBubble({
                                         children,
                                         className
                                     }) {
+                                        const language =
+                                            className?.replace(
+                                                "language-",
+                                                ""
+                                            ) || "text";
+
+                                        const code =
+                                            String(
+                                                children
+                                            ).replace(
+                                                /\n$/,
+                                                ""
+                                            );
+
                                         const isInline =
                                             !className;
 
-                                        if (
-                                            isInline
-                                        ) {
+                                        if (isInline) {
                                             return (
                                                 <code className="rounded-md border border-[var(--border)] bg-[var(--surface-hover)] px-1.5 py-0.5 font-mono text-[0.9em] text-[var(--foreground)]">
                                                     {
@@ -238,34 +259,16 @@ export default function MessageBubble({
                                         }
 
                                         return (
-                                            // <code
-                                            //     className={`block overflow-x-auto p-4 font-mono text-sm leading-6 !text-[var(--code-text)] ${className || ""}`}
-                                            // >
-                                            <code
-                                                className={`block overflow-x-auto whitespace-pre p-4 font-mono text-sm leading-6 !text-[var(--code-text)] ${className || ""}`}
->
-                                                {
-                                                    children
-                                                }
-                                            </code>
-                                        );
-                                    },
-
-                                    pre({
-                                        children
-                                    }) {
-                                        return (
-                                            <CodeBlock>
-                                                {
-                                                    children
-                                                }
-                                            </CodeBlock>
+                                            <CodeBlock
+                                                code={ code }
+                                                language={ language }
+                                            />
                                         );
                                     },
 
                                     hr() {
                                         return (
-                                            <hr className="my-4 border-[var(--border)]" />
+                                            <hr className="my-4 border-\[var(--border)]" />
                                         );
                                     },
 
@@ -302,10 +305,14 @@ export default function MessageBubble({
                                     }
                                 }}
                             >
-                                {
-                                    message.content
-                                }
+                                { message.content }
                             </ReactMarkdown>
+
+                            <span className="text-[10px] text-[var(--muted)]">
+                                {formatMessageTime(
+                                    message.createdAt
+                                )}
+                            </span>
                         </div>
                     )}
 
@@ -387,78 +394,78 @@ export default function MessageBubble({
     );
 }
 
-function CodeBlock({
-    children
-}: {
-    children: React.ReactNode;
-}) {
-    const [copied, setCopied] =
-        useState(false);
+// function CodeBlock({
+//     children
+// }: {
+//     children: React.ReactNode;
+// }) {
+//     const [copied, setCopied] =
+//         useState(false);
 
-    let code = "";
+//     let code = "";
 
-    if (
-        children &&
-        typeof children === "object" &&
-        "props" in children
-    ) {
-        const child =
-            children as React.ReactElement<{
-                children?: React.ReactNode;
-            }>;
+//     if (
+//         children &&
+//         typeof children === "object" &&
+//         "props" in children
+//     ) {
+//         const child =
+//             children as React.ReactElement<{
+//                 children?: React.ReactNode;
+//             }>;
 
-        code = String(
-            child.props.children ?? ""
-        ).replace(/\n$/, "");
-    }
+//         code = String(
+//             child.props.children ?? ""
+//         ).replace(/\n$/, "");
+//     }
 
-    async function copyCode() {
-        try {
-            await navigator.clipboard.writeText(
-                code
-            );
+//     async function copyCode() {
+//         try {
+//             await navigator.clipboard.writeText(
+//                 code
+//             );
 
-            setCopied(true);
+//             setCopied(true);
 
-            setTimeout(() => {
-                setCopied(false);
-            }, 1500);
-        } catch {
-            setCopied(false);
-        }
-    }
+//             setTimeout(() => {
+//                 setCopied(false);
+//             }, 1500);
+//         } catch {
+//             setCopied(false);
+//         }
+//     }
 
-    return (
-        <div className="code-block my-4 overflow-hidden rounded-xl border">
-            <div className="code-header flex items-center justify-between border-b px-3 py-2">
-                <span className="text-xs font-medium">
-                    Code
-                </span>
+//     return (
+//         <div className="code-block my-4 overflow-hidden rounded-xl border">
+//             <div className="code-header flex items-center justify-between border-b px-3 py-2">
+//                 <span className="text-xs font-medium">
+//                     Code
+//                 </span>
 
-                <button
-                    type="button"
-                    onClick={copyCode}
-                    className="code-copy-button flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition"
-                >
-                    {copied ? (
-                        <>
-                            <Check
-                                size={13}
-                            />
-                            Copied
-                        </>
-                    ) : (
-                        <>
-                            <Copy
-                                size={13}
-                            />
-                            Copy
-                        </>
-                    )}
-                </button>
-            </div>
+//                 <button
+//                     type="button"
+//                     onClick={copyCode}
+//                     className="code-copy-button flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition"
+//                 >
+//                     {copied ? (
+//                         <>
+//                             <Check
+//                                 size={13}
+//                             />
+//                             Copied
+//                         </>
+//                     ) : (
+//                         <>
+//                             <Copy
+//                                 size={13}
+//                             />
+//                             Copy
+//                         </>
+//                     )}
+//                 </button>
+//             </div>
 
-            {children}
-        </div>
-    );
-}
+//             {children}
+//         </div>
+//     );
+// }

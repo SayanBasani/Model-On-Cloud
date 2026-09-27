@@ -1,35 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import Chat from "@/components/chat/Chat";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
-
-import {
-    loadChats,
-    saveChats
-} from "@/lib/storage";
-
+import { loadChats, saveChats } from "@/lib/storage";
 import { Chat as ChatType } from "@/lib/types";
 
 export default function Home() {
-    const [
-        sidebarCollapsed,
-        setSidebarCollapsed
-    ] = useState(false);
-
-    const [chats, setChats] =
-        useState<ChatType[]>([]);
-
-    const [activeChatId, setActiveChatId] =
-        useState<string | null>(null);
-
-    const [sidebarOpen, setSidebarOpen] =
-        useState(true);
-
-    const [darkMode, setDarkMode] =
-        useState(false);
+    const [ sidebarCollapsed, setSidebarCollapsed ] = useState(false);
+    const [chats, setChats] = useState<ChatType[]>([]);
+    const [activeChatId, setActiveChatId] = useState<string | null>(null);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [darkMode, setDarkMode] = useState(false);
 
     function handleSidebarToggle() {
         if (window.innerWidth >= 768) {
@@ -44,8 +27,8 @@ export default function Home() {
     }
 
     useEffect(() => {
+        setChats(loadChats());
         const storedChats = loadChats();
-
         setChats(storedChats);
 
         if (storedChats.length > 0) {
@@ -141,32 +124,11 @@ export default function Home() {
     }
 
     function refreshChats() {
-        const updatedChats =
-            loadChats();
-
-        setChats(updatedChats);
+        setChats(loadChats());
     }
 
     return (
-        <main className="flex h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-            {/* <Sidebar
-                chats={chats}
-                activeChatId={activeChatId}
-                isOpen={sidebarOpen}
-                onClose={() =>
-                    setSidebarOpen(false)
-                }
-                onNewChat={createNewChat}
-                onSelectChat={selectChat}
-                onDeleteChat={deleteChat}
-                collapsed={
-                    sidebarCollapsed
-                }
-
-                onCollapsedChange={
-                    setSidebarCollapsed
-                }
-            /> */}
+        <main className="flex h-screen overflow-hidden bg-\[var(--background)] text-\[var(--foreground)]">
             <Sidebar
                 chats={ chats }
                 activeChatId={ activeChatId }
@@ -177,6 +139,7 @@ export default function Home() {
                 onNewChat={ createNewChat }
                 onSelectChat={ selectChat }
                 onDeleteChat={ deleteChat }
+                onChatsChanged={refreshChats}
             />
 
             <section className="flex min-w-0 flex-1 flex-col">

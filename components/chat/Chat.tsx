@@ -1,24 +1,10 @@
 "use client";
 
-import {
-    useEffect,
-    useRef,
-    useState
-} from "react";
-
-import {
-    Message
-} from "@/lib/types";
-
-import {
-    loadChats,
-    saveChats
-} from "@/lib/storage";
-
-import {
-    createChatTitle
-} from "@/lib/message-utils";
-
+import { readAIStream } from "@/lib/stream";
+import { useEffect, useRef, useState } from "react";
+import { Message } from "@/lib/types";
+import { loadChats, saveChats } from "@/lib/storage";
+import { createChatTitle } from "@/lib/message-utils";
 import MessageBubble from "./MessageBubble";
 import ChatInput from "./ChatInput";
 import TypingIndicator from "./TypingIndicator";
@@ -46,6 +32,24 @@ export default function Chat({
 
     const bottomRef =
         useRef<HTMLDivElement>(null);
+        
+    const abortControllerRef =
+        useRef<AbortController | null>(
+            null
+        );
+    const generationIdRef = useRef<string | null>(null);
+
+    function stopGeneration() {
+        generationIdRef.current =
+            null;
+
+        abortControllerRef.current?.abort();
+
+        abortControllerRef.current =
+            null;
+
+        setIsLoading(false);
+    }
 
     useEffect(() => {
         const chats = loadChats();
@@ -168,13 +172,9 @@ export default function Chat({
     }
 
     async function sendMessage() {
-        const content =
-            input.trim();
+        const content = input.trim();
 
-        if (
-            !content ||
-            isLoading
-        ) {
+        if (!content || isLoading) {
             return;
         }
 
@@ -192,56 +192,141 @@ export default function Chat({
             userMessage
         ];
 
-        setMessages(
-            updatedMessages
-        );
-
+        setMessages(updatedMessages);
         setInput("");
         setIsLoading(true);
 
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+        const generationId = crypto.randomUUID();
+        generationIdRef.current = generationId;
+
         try {
-            const answer =
-                await requestAI(
-                    updatedMessages
+            const response =
+                await fetch(
+                    "/api/chat",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+                        body: JSON.stringify({
+                            messages:
+                                updatedMessages.map(
+                                    (message) => ({
+                                        role:
+                                            message.role,
+                                        content:
+                                            message.content
+                                    })
+                                )
+                        }),
+                        signal:
+                            controller.signal
+                    }
                 );
 
-            const assistantMessage:
+            if (!response.ok) {
+                let errorMessage =
+                    "AI request failed.";
+
+                try {
+                    const data =
+                        await response.json();
+
+                    errorMessage =
+                        data?.error ||
+                        errorMessage;
+                } catch {
+                    // Ignore JSON parsing errors.
+                }
+
+                throw new Error(
+                    errorMessage
+                );
+            }
+
+            let answer = "";
+
+            const assistantId =
+                crypto.randomUUID();
+
+            const streamingMessage:
                 Message = {
-                    id:
-                        crypto.randomUUID(),
-                    role:
-                        "assistant",
-                    content:
-                        answer ||
-                        "I couldn't generate a response.",
-                    createdAt:
-                        Date.now()
+                    id: assistantId,
+                    role: "assistant",
+                    content: "",
+                    createdAt: Date.now()
                 };
+
+            setMessages([
+                ...updatedMessages,
+                streamingMessage
+            ]);
+
+            await readAIStream(
+                response,
+                (token) => {
+                    if (
+                        generationIdRef.current !==
+                        generationId
+                    ) {
+                        return;
+                    }
+
+                    answer += token;
+
+                    setMessages([
+                        ...updatedMessages,
+                        {
+                            ...streamingMessage,
+                            content: answer
+                        }
+                    ]);
+                },
+                controller.signal
+            );
+
+            if (
+                generationIdRef.current !==
+                generationId
+            ) { return; }
 
             const finalMessages = [
                 ...updatedMessages,
-                assistantMessage
+                {
+                    ...streamingMessage,
+                    content:
+                        answer ||
+                        "I couldn't generate a response."
+                }
             ];
+            setMessages( finalMessages );
+            updateChat( finalMessages );
 
-            setMessages(
-                finalMessages
-            );
-
-            updateChat(
-                finalMessages
-            );
         } catch (error) {
-            const message =
+            if (
+                error instanceof DOMException &&
+                error.name === "AbortError"
+            ) {
+                return;
+            }
+
+            setError(
                 error instanceof Error
                     ? error.message
-                    : "Something went wrong.";
-
-            setError(message);
+                    : "Something went wrong."
+            );
         } finally {
-            setIsLoading(false);
+            if ( generationIdRef.current === generationId ) {
+                generationIdRef.current = null;
+                abortControllerRef.current = null;
+                setIsLoading(false);
+            }
         }
     }
-
+    
     function editMessage(
         message: Message
     ) {
@@ -541,7 +626,8 @@ export default function Chat({
                 value={input}
                 onChange={setInput}
                 onSend={sendMessage}
-                isLoading={isLoading}
+                onStop={ stopGeneration }
+                isLoading={ isLoading }
             />
         </div>
     );

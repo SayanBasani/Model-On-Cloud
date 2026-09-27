@@ -1,14 +1,14 @@
 "use client";
 
-import {
-    ArrowUp,
-    Square
-} from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 
 type ChatInputProps = {
     value: string;
-    onChange: (value: string) => void;
+    onChange: (
+        value: string
+    ) => void;
     onSend: () => void;
+    onStop: () => void;
     isLoading: boolean;
 };
 
@@ -16,6 +16,7 @@ export default function ChatInput({
     value,
     onChange,
     onSend,
+    onStop,
     isLoading
 }: ChatInputProps) {
     function handleKeyDown(
@@ -35,7 +36,7 @@ export default function ChatInput({
 
     return (
         <div className="mx-auto w-full max-w-4xl px-4 pb-4">
-            <div className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-sm transition focus-within:border-zinc-400">
+            <div className="relative rounded-2xl border border-\[var(--border)] bg-\[var(--surface)] shadow-sm transition focus-within:border-zinc-400">
                 <textarea
                     value={value}
                     onChange={(event) =>
@@ -49,7 +50,11 @@ export default function ChatInput({
 
                 <button
                     type="button"
-                    onClick={onSend}
+                    onClick={
+                        isLoading
+                            ? onStop
+                            : onSend
+                    }
                     disabled={
                         isLoading ||
                         !value.trim()
@@ -58,14 +63,16 @@ export default function ChatInput({
                     aria-label="Send message"
                 >
                     {isLoading ? (
-                        <Square size={15} />
+                        // <Square size={15} />
+                        <span className="text-2xl border w-7 h-7 flex items-center justify-center rounded-2xl"> ■ </span>
                     ) : (
-                        <ArrowUp size={18} />
+                        // <ArrowUp size={18} />
+                        <ArrowUp size={17} />
                     )}
                 </button>
             </div>
 
-            <p className="mt-2 text-center text-xs text-[var(--muted)]">
+            <p className="mt-2 text-center text-xs text-\[var(--muted)]">
                 ModelOnCloud can make mistakes. Check important information.
             </p>
         </div>
